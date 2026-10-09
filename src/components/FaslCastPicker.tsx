@@ -1,87 +1,105 @@
 import { formatPrice } from '../data/books'
-import { characterGroups, characters } from '../data/characters'
-import { faces } from '../data/faces'
-import {
-  getStoryStyle,
-  PARENT_LIKENESS_PRICE,
-  type StoryStyleId,
-} from '../data/styles'
-
-const parentFaces = {
-  mom: faces.find((face) => face.id === 'laila')?.cartoon,
-  dad: faces.find((face) => face.id === 'adam')?.cartoon,
-}
-
-export function getParentLikeness(id: string) {
-  return id === 'mom' || id === 'dad' ? parentFaces[id] : undefined
-}
+import { characters } from '../data/characters'
+import { hiddenFaceMessage, neutralCopy } from '../data/fasl-copy'
+import { getParentLikeness } from '../data/likeness'
+import { DEDICATION_MAX } from '../data/notes'
+import { formatEGP, type FaceParent } from '../data/pricing'
+import { getStoryStyle, type StoryStyleId } from '../data/styles'
 
 export function FaslCastPicker({
-  selected,
+  momName,
+  dadName,
+  animals,
   likenessIds,
   styleId,
-  onToggleName,
+  dedication,
+  childName,
+  onMomName,
+  onDadName,
+  onToggleAnimal,
   onToggleLikeness,
+  onDedication,
 }: {
-  selected: string[]
-  likenessIds: string[]
+  momName: string
+  dadName: string
+  animals: string[]
+  likenessIds: FaceParent[]
   styleId: StoryStyleId
-  onToggleName: (id: string) => void
-  onToggleLikeness: (id: string) => void
+  dedication: string
+  childName: string
+  onMomName: (value: string) => void
+  onDadName: (value: string) => void
+  onToggleAnimal: (id: string) => void
+  onToggleLikeness: (id: FaceParent) => void
+  onDedication: (value: string) => void
 }) {
   const style = getStoryStyle(styleId)
+  const drawn = !style.textOnly
+  const hidden = style.textOnly ? hiddenFaceMessage(likenessIds) : ''
 
   return (
     <div className="cast fasl-cast">
-      {characterGroups.map((group) => (
-        <fieldset key={group.id}>
-          <legend>{group.label}</legend>
-          <div className="cast-list">
-            {characters
-              .filter((character) => character.group === group.id)
-              .map((character) => {
-                const selectedName = selected.includes(character.id)
-                const selectedLikeness = likenessIds.includes(character.id)
-                const isParent = character.group === 'family'
-                const face = getParentLikeness(character.id)
-
-                return (
-                  <div
-                    className={selectedName ? 'fasl-cast-row is-on' : 'fasl-cast-row'}
-                    key={character.id}
-                  >
-                    <button
-                      type="button"
-                      className="fasl-cast-name"
-                      aria-pressed={selectedName}
-                      onClick={() => onToggleName(character.id)}
-                    >
-                      <span>
-                        <strong>{character.label}</strong>
-                        {isParent && <small>الاسم يدخل الحكاية من غير رسوم</small>}
-                      </span>
-                      <b>{isParent ? 'مجاني' : `+${formatPrice(character.price)}`}</b>
-                    </button>
-                    {isParent && selectedName && !style.textOnly && face && (
-                      <button
-                        type="button"
-                        className={selectedLikeness ? 'likeness-choice is-on' : 'likeness-choice'}
-                        aria-pressed={selectedLikeness}
-                        onClick={() => onToggleLikeness(character.id)}
-                      >
-                        <img src={face} alt="" />
-                        <span>
-                          {selectedLikeness ? 'وش مضاف' : `أضف وش ${character.label}`}
-                          <small>+{formatPrice(PARENT_LIKENESS_PRICE)}</small>
-                        </span>
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
-          </div>
+      <label className="field">
+        ماما
+        <input value={momName} onChange={(event) => onMomName(event.target.value)} />
+        <small>مجاني</small>
+      </label>
+      <label className="field">
+        بابا
+        <input value={dadName} onChange={(event) => onDadName(event.target.value)} />
+        <small>مجاني</small>
+      </label>
+      <fieldset>
+        <legend>الحيوانات</legend>
+        <div className="cast-list">
+          {characters
+            .filter((character) => character.group === 'animals')
+            .map((character) => {
+              const on = animals.includes(character.id)
+              return (
+                <button
+                  key={character.id}
+                  type="button"
+                  className={on ? 'fasl-cast-name is-on' : 'fasl-cast-name'}
+                  aria-pressed={on}
+                  onClick={() => onToggleAnimal(character.id)}
+                >
+                  <strong>{character.label}</strong>
+                  <b>+{formatPrice(character.price)}</b>
+                </button>
+              )
+            })}
+        </div>
+      </fieldset>
+      {drawn && (
+        <fieldset>
+          <legend>الوجوه</legend>
+          {(['mom', 'dad'] as const).map((id) => {
+            const on = likenessIds.includes(id)
+            const face = getParentLikeness(id)
+            return (
+              <button
+                key={id}
+                type="button"
+                className={on ? 'likeness-choice is-on' : 'likeness-choice'}
+                aria-pressed={on}
+                onClick={() => onToggleLikeness(id)}
+              >
+                {face && <img src={face} alt="" />}
+                <span>
+                  {on ? 'وش مضاف' : `أضف وش ${id === 'mom' ? 'ماما' : 'بابا'}`}
+                  <small>+{formatEGP(90)}</small>
+                </span>
+              </button>
+            )
+          })}
         </fieldset>
-      ))}
+      )}
+      {hidden && <p className="sub">{hidden}</p>}
+      <label className="field">
+        {neutralCopy.dedication.replace('{الاسم}', childName.trim() || 'طفلك')}
+        <textarea maxLength={DEDICATION_MAX} value={dedication} onChange={(event) => onDedication(event.target.value)} />
+      </label>
     </div>
   )
 }

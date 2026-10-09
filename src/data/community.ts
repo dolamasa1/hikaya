@@ -1,4 +1,5 @@
 import type { Gender } from './books'
+import { communityRecord } from './communityPost'
 import type { LessonId } from './lessons'
 import type { StoryStyleId } from './styles'
 
@@ -6,8 +7,10 @@ export type CommunityPost = {
   id: string
   lessonId: LessonId
   name: string
+  displayName?: string
   gender: Gender
   extraIds: string[]
+  animals?: string[]
   styleId?: StoryStyleId
   likenessIds?: string[]
   yours: boolean
@@ -15,6 +18,7 @@ export type CommunityPost = {
   publisher: string
   rating: number
   reviews: number
+  publishedAt?: number
 }
 
 const key = 'hikaya-community'
@@ -99,30 +103,99 @@ function settle(post: CommunityPost): CommunityPost {
   }
 }
 
+function fromSaved(raw: Record<string, unknown>): CommunityPost {
+  const record = communityRecord(raw, `saved-${Date.now()}`)
+  return settle({
+    id: record.id,
+    lessonId: record.lessonId,
+    name: record.displayName,
+    displayName: record.displayName,
+    gender: record.gender,
+    extraIds: record.animals,
+    animals: record.animals,
+    styleId: record.styleId,
+    yours: true,
+    cover: record.cover,
+    publisher: record.publisher,
+    rating: record.rating,
+    reviews: record.reviews,
+    publishedAt: record.publishedAt,
+  })
+}
+
 export function loadCommunity(): CommunityPost[] {
   try {
     const raw = localStorage.getItem(key)
-    const saved = raw ? (JSON.parse(raw) as CommunityPost[]) : []
-    return [...saved.filter((post) => post.yours).map(settle), ...seed]
+    const saved = raw ? (JSON.parse(raw) as Record<string, unknown>[]) : []
+    const yours = saved.filter((post) => post.yours === true).map(fromSaved)
+    const privateKey = /"(notes|likenessIds|momName|dadName|dedication|parentRole|faces|faceParents)"/
+    if (privateKey.test(raw ?? '')) {
+      const clean = yours.map((post) => ({
+        id: post.id,
+        lessonId: post.lessonId,
+        displayName: post.displayName,
+        gender: post.gender,
+        styleId: post.styleId,
+        animals: post.animals,
+        publishedAt: post.publishedAt,
+        yours: true,
+        cover: post.cover,
+        publisher: post.publisher,
+        rating: post.rating,
+        reviews: post.reviews,
+      }))
+      localStorage.setItem(key, JSON.stringify(clean))
+    }
+    return [...yours, ...seed]
   } catch {
     return seed
   }
 }
 
-export function publishPost(post: Omit<CommunityPost, 'id' | 'yours' | 'cover' | 'publisher' | 'rating' | 'reviews'> & Partial<Pick<CommunityPost, 'cover' | 'publisher'>>) {
-  const next: CommunityPost = {
-    ...post,
+export function publishShelf(input: {
+  lessonId: LessonId
+  displayName: string
+  gender: Gender
+  styleId: StoryStyleId
+  animals: string[]
+}) {
+  const next = fromSaved({
     id: `yours-${Date.now()}`,
+    lessonId: input.lessonId,
+    displayName: input.displayName.trim(),
+    gender: input.gender,
+    styleId: input.styleId,
+    animals: input.animals,
     yours: true,
-    cover: post.cover || coverFor(post.lessonId),
-    publisher: post.publisher || 'حسابكم',
+    publisher: 'حسابكم',
+    publishedAt: Date.now(),
+  })
+  const raw = localStorage.getItem(key)
+  const saved = raw ? (JSON.parse(raw) as Record<string, unknown>[]) : []
+  const stored = {
+    id: next.id,
+    lessonId: next.lessonId,
+    displayName: next.displayName,
+    gender: next.gender,
+    styleId: next.styleId,
+    animals: next.animals,
+    publishedAt: next.publishedAt,
+    yours: true,
+    cover: next.cover,
+    publisher: next.publisher,
     rating: 0,
     reviews: 0,
   }
-  const raw = localStorage.getItem(key)
-  const saved = raw ? (JSON.parse(raw) as CommunityPost[]) : []
-  localStorage.setItem(key, JSON.stringify([next, ...saved]))
+  localStorage.setItem(key, JSON.stringify([stored, ...saved]))
   return next
+}
+
+export function postTitle(post: CommunityPost) {
+  return post.displayName || post.name
+}
+
+export function postExtras(post: CommunityPost) {
+  return post.animals ?? post.extraIds ?? []
 }
 
 export function getPost(id: string | undefined) {

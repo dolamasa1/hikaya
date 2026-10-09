@@ -1,9 +1,9 @@
 import { Link, useParams } from 'react-router-dom'
-import { getParentLikeness } from '../components/FaslCastPicker'
 import { PageArt } from '../components/PageArt'
 import { StoryRating } from '../components/StoryRating'
 import { asset } from '../data/asset'
-import { getPost } from '../data/community'
+import { getPost, postExtras, postTitle } from '../data/community'
+import { neutralCopy } from '../data/fasl-copy'
 import { buildLesson, getLesson } from '../data/lessons'
 import { getStoryStyle } from '../data/styles'
 
@@ -24,10 +24,9 @@ export function CommunityStory() {
     )
   }
 
-  const story = buildLesson(post.lessonId, post.gender, post.name, post.extraIds)
+  const story = buildLesson(post.lessonId, post.gender, postTitle(post), postExtras(post))
   const lesson = getLesson(post.lessonId)
   const style = getStoryStyle(post.styleId)
-  const parentFace = style.textOnly ? undefined : getParentLikeness(post.likenessIds?.[0] ?? '')
   const plates = [{ scene: 'dedication' as const, text: story.dedication }, ...story.pages]
 
   return (
@@ -42,7 +41,8 @@ export function CommunityStory() {
               {lesson?.title} · {style.title}
               {post.yours ? ' · حكايتكم' : ''}
             </p>
-            <h1 className="page-title">{post.name}</h1>
+            <p className="sub">{neutralCopy.readerCaption}</p>
+            <h1 className="page-title">{postTitle(post)}</h1>
             <p className="gallery-by">{post.publisher}</p>
             <StoryRating rating={post.rating} reviews={post.reviews} />
           </div>
@@ -58,12 +58,7 @@ export function CommunityStory() {
                   فصل حكايتك
                 </div>
               ) : (
-                <PageArt
-                  scene={plate.scene}
-                  cover={style.cover}
-                  ink={style.ink}
-                  face={index === plates.length - 1 ? parentFace : undefined}
-                />
+                <PageArt scene={plate.scene} cover={style.cover} ink={style.ink} />
               )}
               <p className="reader-text">{plate.text}</p>
             </article>

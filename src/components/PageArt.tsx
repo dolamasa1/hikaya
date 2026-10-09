@@ -521,16 +521,18 @@ export function PageArt({
   cover,
   ink,
   face,
+  compact = false,
 }: {
   scene: Scene
   cover: string
   ink: string
   face?: string
+  compact?: boolean
 }) {
   const head = face ? heads[scene] : undefined
 
   return (
-    <div className="plate-art">
+    <div className={compact ? 'plate-art is-compact' : 'plate-art'}>
       <svg viewBox="0 0 300 400" role="img" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
         {sceneArt(scene, cover, ink)}
       </svg>

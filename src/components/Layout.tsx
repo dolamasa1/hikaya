@@ -1,10 +1,45 @@
-import { Link, NavLink, Outlet, useMatch } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, NavLink, Outlet, useLocation, useMatch } from 'react-router-dom'
+import { ThemeContext, useTheme } from '../data/useTheme'
+import type { ThemeId } from '../data/theme'
+import { AmbientBackdrop } from './AmbientBackdrop'
+import { WizardStepContext } from './wizardStep'
+
+const themeChoices: { id: ThemeId; title: string; note: string }[] = [
+  { id: 'text', title: 'الكلام', note: 'صفحة مسطحة وحبر' },
+  { id: 'paper', title: 'ورق', note: 'ألوان مائية وملمس' },
+  { id: 'night', title: 'ليل', note: 'حفر كحلي' },
+]
 
 export function Layout() {
   const reading = useMatch('/books/:slug/read')
+  const location = useLocation()
+  const [theme, choose] = useTheme()
+  const [stepIndex, setStepIndex] = useState(0)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const settingsRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!settingsOpen) return
+    function closeOnOutside(event: MouseEvent) {
+      if (!settingsRef.current?.contains(event.target as Node)) setSettingsOpen(false)
+    }
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setSettingsOpen(false)
+    }
+    document.addEventListener('mousedown', closeOnOutside)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutside)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [settingsOpen])
 
   return (
+    <ThemeContext.Provider value={{ theme, choose }}>
+    <WizardStepContext.Provider value={setStepIndex}>
     <div className={reading ? 'app is-reading' : 'app'}>
+      <AmbientBackdrop theme={theme} stepIndex={stepIndex} mark={location.pathname} />
       <div className="promo">
         اطلب كتابًا، والتاني بنص الثمن
         <span>HEKAYA</span>
@@ -29,9 +64,39 @@ export function Layout() {
             <Link to="/books" aria-label="بحث">
               <SearchIcon />
             </Link>
-            <span className="icon-btn" aria-hidden="true">
-              <UserIcon />
-            </span>
+            <div className="profile" ref={settingsRef}>
+              <button
+                type="button"
+                className="icon-btn"
+                aria-expanded={settingsOpen}
+                aria-haspopup="dialog"
+                aria-label="الإعدادات"
+                onClick={() => setSettingsOpen((open) => !open)}
+              >
+                <UserIcon />
+              </button>
+              {settingsOpen && (
+                <div className="profile-panel" role="dialog" aria-label="الإعدادات">
+                  <p className="footer-label">أسلوب الحكاية</p>
+                  <div className="profile-themes" role="radiogroup" aria-label="أسلوب الحكاية">
+                    {themeChoices.map((choice) => (
+                      <button
+                        key={choice.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={theme === choice.id}
+                        data-theme={choice.id}
+                        className={theme === choice.id ? 'profile-theme is-on' : 'profile-theme'}
+                        onClick={() => choose(choice.id)}
+                      >
+                        <strong>{choice.title}</strong>
+                        <span>{choice.note}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             <span className="icon-btn" aria-label="السلة فاضية">
               <BagIcon />
             </span>
@@ -61,6 +126,8 @@ export function Layout() {
         </div>
       </footer>
     </div>
+    </WizardStepContext.Provider>
+    </ThemeContext.Provider>
   )
 }
 
