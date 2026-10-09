@@ -2,7 +2,7 @@ import { createContext, useEffect, useState } from 'react'
 import { parseTheme, readTheme, writeTheme, type ThemeId } from './theme'
 
 export const ThemeContext = createContext<{ theme: ThemeId; choose: (theme: ThemeId) => void }>({
-  theme: 'paper',
+  theme: 'default',
   choose: () => undefined,
 })
 
@@ -15,7 +15,7 @@ function memory() {
 
 export function useTheme() {
   const [theme, setTheme] = useState<ThemeId>(() => {
-    if (typeof localStorage === 'undefined') return 'paper'
+    if (typeof localStorage === 'undefined') return 'default'
     return readTheme(memory())
   })
 

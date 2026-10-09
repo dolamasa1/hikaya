@@ -94,6 +94,15 @@ main { flex: 1; }
 }
 .profile-theme strong { font-size: 1.2rem; line-height: 1.2; }
 .profile-theme span { font-size: 0.82rem; }
+.profile-theme[data-theme="default"] {
+  background: #fffcf8;
+  color: #1c1b19;
+  border-color: #12382f;
+  border-radius: 2px;
+  font-family: Cairo, sans-serif;
+}
+.profile-theme[data-theme="default"] strong { font-family: Amiri, serif; color: #12382f; }
+.profile-theme[data-theme="default"] span { color: #5e5a55; }
 .profile-theme[data-theme="text"] {
   background: #f7f4ec;
   color: #241f1a;
@@ -693,6 +702,27 @@ legend { font-weight: 700; margin-bottom: 0.4rem; }
   .ask { font-size: 1.8rem; }
 }
 
+html[data-theme="default"] {
+  --bg: #f3f1ee;
+  --surface: #fffcf8;
+  --ink: #1c1b19;
+  --accent: #12382f;
+  --line: #e4e0da;
+  --paper: #f3f1ee;
+  --card: #fffcf8;
+  --green: #12382f;
+  --muted: #5e5a55;
+  --price: #146c45;
+  --display-weight: 700;
+  --font-body: Cairo, "Segoe UI", sans-serif;
+  --font-display: Amiri, "Times New Roman", serif;
+}
+html[data-theme="default"] .header {
+  background: #fff;
+  border-bottom: 1px solid #e4e0da;
+  box-shadow: none;
+  border-radius: 0;
+}
 html[data-theme="text"] {
   --bg: #f4f1e8;
   --surface: #f7f4ec;

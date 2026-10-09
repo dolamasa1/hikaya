@@ -1,11 +1,11 @@
 import type { StoryStyleId } from './styles'
 
 export const THEME_KEY = 'hikaya.theme.v1'
-export const THEMES = ['text', 'paper', 'night'] as const
+export const THEMES = ['default', 'text', 'paper', 'night'] as const
 export type ThemeId = (typeof THEMES)[number]
 
 export function parseTheme(value: string | null | undefined): ThemeId {
-  return value === 'text' || value === 'night' || value === 'paper' ? value : 'paper'
+  return value === 'default' || value === 'text' || value === 'night' || value === 'paper' ? value : 'default'
 }
 
 export function themeFromStyle(styleId: StoryStyleId | string | null | undefined): ThemeId {
@@ -21,7 +21,7 @@ export function readTheme(store: Store) {
   try {
     return parseTheme(store.getItem(THEME_KEY))
   } catch {
-    return 'paper' as const
+    return 'default' as const
   }
 }
 

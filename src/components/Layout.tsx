@@ -6,6 +6,7 @@ import { AmbientBackdrop } from './AmbientBackdrop'
 import { WizardStepContext } from './wizardStep'
 
 const themeChoices: { id: ThemeId; title: string; note: string }[] = [
+  { id: 'default', title: 'Default', note: 'الشكل الأصلي' },
   { id: 'text', title: 'الكلام', note: 'صفحة مسطحة وحبر' },
   { id: 'paper', title: 'ورق', note: 'ألوان مائية وملمس' },
   { id: 'night', title: 'ليل', note: 'حفر كحلي' },

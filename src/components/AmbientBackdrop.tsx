@@ -37,6 +37,8 @@ export function AmbientBackdrop({
     }
   }, [reducedMotion])
 
+  if (theme === 'default') return null
+
   const still = reducedMotion || quiet
   const moon = Math.max(0, Math.min(1, stepIndex / 7))
   const moonTop = 8 + (1 - moon) * 28
